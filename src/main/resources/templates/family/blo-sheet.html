@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLO Verification Sheet - <span th:text="${family.familyCode}">FAM-XXX</span></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { 
+                font-size: 11pt; 
+                background: white;
+                margin: 0;
+                padding: 15px;
+            }
+            .page-break { page-break-after: always; }
+            .card { border: 1px solid #000 !important; box-shadow: none !important; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+        }
+        
+        @media screen {
+            body { background-color: #f0f0f0; padding: 20px; }
+            .print-container { 
+                max-width: 210mm; 
+                margin: 0 auto; 
+                background: white; 
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+        }
+        
+        .header-section {
+            border: 2px solid #000;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .section-title {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            margin: 20px 0 10px 0;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+        
+        .info-table {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .info-table td {
+            padding: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            background-color: #e9ecef;
+            width: 40%;
+        }
+        
+        .member-card {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #fff;
+        }
+        
+        .member-header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 8px;
+            margin: -10px -10px 10px -10px;
+            font-weight: bold;
+        }
+        
+        .error-box {
+            background-color: #f8d7da;
+            border: 2px solid #dc3545;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            border-top: 2px solid #000;
+            padding-top: 20px;
+        }
+        
+        .signature-box {
+            border: 1px solid #000;
+            padding: 40px 15px 15px 15px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80pt;
+            color: rgba(0,0,0,0.05);
+            z-index: -1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark no-print" th:if="${validationErrors != null && !validationErrors.isEmpty()}">
+        VALIDATION ERRORS
+    </div>
+
+    <div class="print-container">
+        <!-- Print/Back Buttons -->
+        <div class="no-print mb-3 d-flex justify-content-between">
+            <a th:href="@{/families/{id}/hierarchy(id=${family.id})}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer"></i> Print
+            </button>
+        </div>
+
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="text-center">
+                <h3 class="mb-1">BLO VERIFICATION SHEET</h3>
+                <h5 class="mb-2">Special Intensive Revision (SIR)</h5>
+                <p class="mb-0"><small>Family-wise Voter Hierarchy Data Collection</small></p>
+            </div>
+        </div>
+
+        <!-- Family Information -->
+        <div class="section-title">FAMILY INFORMATION</div>
+        <table class="info-table">
+            <tr>
+                <td class="info-label">Family Code:</td>
+                <td><strong th:text="${family.familyCode}">FAM-XXX</strong></td>
+                <td class="info-label">Total Members:</td>
+                <td><strong th:text="${family.members != null ? family.members.size() : 0}">0</strong></td>
+            </tr>
+            <tr>
+                <td class="info-label">Contact Person:</td>
+                <td th:text="${family.contactPerson ?: 'N/A'}">-</td>
+                <td class="info-label">Contact Number:</td>
+                <td th:text="${family.contactNumber ?: 'N/A'}">-</td>
+            </tr>
+            <tr>
+                <td class="info-label">Created On:</td>
+                <td th:text="${family.createdAt != null ? #temporals.format(family.createdAt, 'dd-MM-yyyy HH:mm') : 'N/A'}">-</td>
+                <td class="info-label">Print Date:</td>
+                <td th:text="${#temporals.format(printDate, 'dd-MM-yyyy HH:mm')}">-</td>
+            </tr>
+        </table>
+
+        <!-- Validation Errors (if any) -->
+        <div th:if="${validationErrors != null && !validationErrors.isEmpty()}" class="error-box">
+            <h6 class="text-danger mb-3">⚠ VALIDATION ERRORS - REQUIRES BLO ATTENTION</h6>
+            <div th:each="error : ${validationErrors}" class="mb-2">
+                <strong th:text="${error.relationType}">RELATION</strong> - 
+                <span th:text="${error.memberName}">Name</span><br>
+                <small>
+                    <strong>Issue:</strong> <span th:text="${error.errorMessage}">Error</span><br>
+                    <strong>Expected:</strong> <span th:text="${error.expectedValue}">-</span><br>
+                    <strong>Found:</strong> <span th:text="${error.foundValue}">-</span>
+                </small>
+            </div>
+        </div>
+
+        <!-- Family Head Details -->
+        <div class="section-title">FAMILY HEAD DETAILS</div>
+        <div class="member-card">
+            <div class="member-header">FAMILY HEAD</div>
+            
+            <div th:if="${family.familyHead != null}">
+                <table class="info-table">
+                    <tr>
+                        <td colspan="4" style="background-color: #e7f3ff; font-weight: bold;">2002 Voter List Details</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Name:</td>
+                        <td th:text="${family.familyHead.voterDetails2002?.name ?: 'N/A'}">-</td>
+                        <td class="info-label">Parent/Spouse:</td>
+                        <td th:text="${family.familyHead.voterDetails2002?.parentSpouseName ?: 'N/A'}">-</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">EPIC No:</td>
+                        <td th:text="${family.familyHead.voterDetails2002?.epicNo ?: 'N/A'}">-</td>
+                        <td class="info-label">AC No:</td>
+                        <td th:text="${family.familyHead.voterDetails2002?.acNo ?: 'N/A'}">-</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Part No:</td>
+                        <td th:text="${family.familyHead.voterDetails2002?.partNo ?: 'N/A'}">-</td>
+                        <td class="info-label">Serial No:</td>
+                        <td th:text="${family.familyHead.voterDetails2002?.serialNo ?: 'N/A'}">-</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Status:</td>
+                        <td colspan="3">
+                            <span class="badge" 
+                                  th:classappend="${family.familyHead.status.toString() == 'ACTIVE' ? 'bg-success' : 'bg-secondary'}"
+                                  th:text="${family.familyHead.status.displayName}">Active</span>
+                        </td>
+                    </tr>
+                </table>
+
+                <div th:if="${family.familyHead.voterDetailsCurrent != null}">
+                    <table class="info-table">
+                        <tr>
+                            <td colspan="4" style="background-color: #d4edda; font-weight: bold;">Current Voter ID Details</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">Name:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.name}">-</td>
+                            <td class="info-label">Parent/Spouse:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.parentSpouseName}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">EPIC No:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.epicNo}">-</td>
+                            <td class="info-label">AC No:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.acNo}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">Part No:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.partNo}">-</td>
+                            <td class="info-label">Serial No:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.serialNo}">-</td>
+                        </tr>
+                        <tr th:if="${family.familyHead.voterDetailsCurrent.bloDetails != null}">
+                            <td class="info-label">BLO Name:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.bloDetails.bloName}">-</td>
+                            <td class="info-label">BLO Mobile:</td>
+                            <td th:text="${family.familyHead.voterDetailsCurrent.bloDetails.bloMobile}">-</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Family Members Details -->
+        <div th:if="${family.members != null && family.members.size() > 1}">
+            <div class="section-title">FAMILY MEMBERS DETAILS</div>
+            
+            <div th:each="member, iterStat : ${family.members}" 
+                 th:if="${member.isFamilyHead == null || !member.isFamilyHead}">
+                
+                <div class="member-card">
+                    <div class="member-header" 
+                         th:text="'MEMBER #' + ${iterStat.count} + ' - ' + ${member.relationType.displayName}">
+                        MEMBER
+                    </div>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-label">Relation:</td>
+                            <td th:text="${member.relationType.displayName}">-</td>
+                            <td class="info-label">Age:</td>
+                            <td th:text="${member.age ?: 'N/A'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">Status:</td>
+                            <td colspan="3">
+                                <span class="badge" 
+                                      th:classappend="${member.status.toString() == 'ACTIVE' ? 'bg-success' : 'bg-secondary'}"
+                                      th:text="${member.status.displayName}">Active</span>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- 2002 Details (if exists) -->
+                    <div th:if="${member.voterDetails2002 != null}">
+                        <table class="info-table">
+                            <tr>
+                                <td colspan="4" style="background-color: #e7f3ff; font-weight: bold;">2002 Voter List Details</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Name:</td>
+                                <td th:text="${member.voterDetails2002.name}">-</td>
+                                <td class="info-label">Parent/Spouse:</td>
+                                <td th:text="${member.voterDetails2002.parentSpouseName}">-</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">EPIC No:</td>
+                                <td th:text="${member.voterDetails2002.epicNo}">-</td>
+                                <td class="info-label">AC No:</td>
+                                <td th:text="${member.voterDetails2002.acNo}">-</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Part No:</td>
+                                <td th:text="${member.voterDetails2002.partNo}">-</td>
+                                <td class="info-label">Serial No:</td>
+                                <td th:text="${member.voterDetails2002.serialNo}">-</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Current Details (if exists) -->
+                    <div th:if="${member.voterDetailsCurrent != null}">
+                        <table class="info-table">
+                            <tr>
+                                <td colspan="4" style="background-color: #d4edda; font-weight: bold;">Current Voter ID Details</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Name:</td>
+                                <td th:text="${member.voterDetailsCurrent.name}">-</td>
+                                <td class="info-label">Parent/Spouse:</td>
+                                <td th:text="${member.voterDetailsCurrent.parentSpouseName}">-</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">EPIC No:</td>
+                                <td th:text="${member.voterDetailsCurrent.epicNo}">-</td>
+                                <td class="info-label">AC No:</td>
+                                <td th:text="${member.voterDetailsCurrent.acNo}">-</td>
+                            </tr>
+                            <tr>
+                                <td class="info-label">Part No:</td>
+                                <td th:text="${member.voterDetailsCurrent.partNo}">-</td>
+                                <td class="info-label">Serial No:</td>
+                                <td th:text="${member.voterDetailsCurrent.serialNo}">-</td>
+                            </tr>
+                            <tr th:if="${member.voterDetailsCurrent.bloDetails != null}">
+                                <td class="info-label">BLO Name:</td>
+                                <td th:text="${member.voterDetailsCurrent.bloDetails.bloName}">-</td>
+                                <td class="info-label">BLO Mobile:</td>
+                                <td th:text="${member.voterDetailsCurrent.bloDetails.bloMobile}">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLO Verification Section -->
+        <div class="signature-section">
+            <div class="section-title">BLO VERIFICATION & CERTIFICATION</div>
+            
+            <table class="info-table">
+                <tr>
+                    <td class="info-label" style="width: 30%;">Verification Date:</td>
+                    <td>_________________________________</td>
+                </tr>
+                <tr>
+                    <td class="info-label">BLO Remarks:</td>
+                    <td style="height: 80px; vertical-align: top;">
+                        <br><br><br>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="row mt-4">
+                <div class="col-6">
+                    <div class="signature-box">
+                        <strong>BLO Signature</strong>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small>Name: _______________________</small><br>
+                        <small>ID: _________________________</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="signature-box">
+                        <strong>Supervising Officer Signature</strong>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small>Name: _______________________</small><br>
+                        <small>Designation: __________________</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-4" style="border-top: 1px solid #dee2e6; padding-top: 10px;">
+            <small class="text-muted">
+                This is a computer-generated document for BLO field verification purposes only.<br>
+                Family-wise Voter Hierarchy Collection System | SIR Data Collection | Version 1.0.0
+            </small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

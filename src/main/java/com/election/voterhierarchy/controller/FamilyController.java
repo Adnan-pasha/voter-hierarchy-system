@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/families")
@@ -329,5 +330,19 @@ public class FamilyController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting family: " + e.getMessage());
         }
         return "redirect:/families";
+    }
+
+    @GetMapping("/{id}/blo-sheet")
+    public String bloVerificationSheet(@PathVariable Long id, Model model) {
+        Family family = familyService.getFamilyForBloSheet(id);
+        HierarchyNode hierarchy = familyService.buildHierarchy(id);
+        List<ValidationError> validationErrors = familyService.validateFamily(id);
+        
+        model.addAttribute("family", family);
+        model.addAttribute("hierarchy", hierarchy);
+        model.addAttribute("validationErrors", validationErrors);
+        model.addAttribute("printDate", LocalDateTime.now());
+        
+        return "family/blo-sheet";
     }
 }

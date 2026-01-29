@@ -552,4 +552,10 @@ public class FamilyService {
         
         return stats;
     }
+
+    @Transactional(readOnly = true)
+    public Family getFamilyForBloSheet(Long familyId) {
+        return familyRepository.findByIdWithFullDetails(familyId)
+            .orElseThrow(() -> new RuntimeException("Family not found with ID: " + familyId));
+    }
 }
