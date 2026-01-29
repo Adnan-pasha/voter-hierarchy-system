@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Family Member - Voter Hierarchy System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #2c3e50 !important;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #fff !important;
+        }
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            margin-bottom: 1.5rem;
+        }
+        .form-section {
+            background-color: #e9ecef;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+        .conditional-section {
+            display: none;
+            border-left: 3px solid #0d6efd;
+            padding-left: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark navbar-expand-lg mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/families">
+                <i class="bi bi-people-fill"></i> Voter Hierarchy System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/families">
+                            <i class="bi bi-house-door"></i> Families
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/families/new">
+                            <i class="bi bi-plus-circle"></i> New Family
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="nav-link btn btn-link text-white">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-person-plus"></i> Add Family Member</h2>
+            <div>
+                <a th:href="@{/families/{id}/hierarchy(id=${family.id})}" class="btn btn-info">
+                    <i class="bi bi-diagram-3"></i> View Hierarchy
+                </a>
+                <a th:href="@{/families/{id}/finish(id=${family.id})}" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Finish & Review
+                </a>
+            </div>
+        </div>
+
+        <!-- Family Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-house-door"></i> Family: 
+                    <span th:text="${family.familyCode}">FAM-XXX</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Family Head:</strong>
+                        <span th:if="${family.familyHead ne null and family.familyHead.voterDetails2002 ne null}"
+                              th:text="${family.familyHead.voterDetails2002.name}">
+                            Name
+                        </span>
+                        <span th:if="${family.familyHead eq null or family.familyHead.voterDetails2002 eq null}">
+                            <em class="text-muted">No data</em>
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Current Members:</strong>
+                        <span class="badge bg-info" th:text="${family.members ne null ? family.members.size() : 0}">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Member Form -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/families/{id}/members/add(id=${family.id})}" 
+                      th:object="${familyMemberDTO}" method="post">
+                    
+                    <!-- Relation, Age, Status (Strict Order) -->
+                    <div class="form-section">
+                        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Basic Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="relationType" class="form-label">Relation Type *</label>
+                                <select class="form-select" id="relationType" th:field="*{relationType}" 
+                                        required onchange="updateFormVisibility()">
+                                    <option value="">-- Select Relation --</option>
+                                    <option th:each="relation : ${relationTypes}" 
+                                            th:value="${relation}" 
+                                            th:text="${relation.displayName}">
+                                    </option>
+                                </select>
+                                <div class="text-danger" th:if="${#fields.hasErrors('relationType')}" 
+                                     th:errors="*{relationType}"></div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="age" class="form-label">Age *</label>
+                                <input type="number" class="form-control" id="age" 
+                                       th:field="*{age}" required min="1" max="120"
+                                       onchange="updateFormVisibility()">
+                                <div class="text-danger" th:if="${#fields.hasErrors('age')}" 
+                                     th:errors="*{age}"></div>
+                                <small class="form-text text-muted">
+                                    2002 voter details required if age ≥ 41
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="status" class="form-label">Status *</label>
+                                <select class="form-select" id="status" th:field="*{status}" 
+                                        required onchange="updateFormVisibility()">
+                                    <option value="">-- Select Status --</option>
+                                    <option th:each="status : ${statuses}" 
+                                            th:value="${status}" 
+                                            th:text="${status.displayName}">
+                                    </option>
+                                </select>
+                                <div class="text-danger" th:if="${#fields.hasErrors('status')}" 
+                                     th:errors="*{status}"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2002 Voter Details (Conditional: Age >= 41) -->
+                    <div id="voter2002Section" class="conditional-section">
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="bi bi-calendar3"></i> 2002 Voter List Details 
+                                <small class="text-muted">(Required for Age ≥ 41)</small>
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name2002" class="form-label">Name (2002)</label>
+                                    <input type="text" class="form-control" id="name2002" 
+                                           th:field="*{name2002}">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="parentSpouseName2002" class="form-label">Parent/Spouse Name (2002)</label>
+                                    <input type="text" class="form-control" id="parentSpouseName2002" 
+                                           th:field="*{parentSpouseName2002}">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label for="epicNo2002" class="form-label">EPIC No (2002)</label>
+                                    <input type="text" class="form-control" id="epicNo2002" 
+                                           th:field="*{epicNo2002}">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="acNo2002" class="form-label">AC No (2002)</label>
+                                    <input type="text" class="form-control" id="acNo2002" 
+                                           th:field="*{acNo2002}">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="partNo2002" class="form-label">Part No (2002)</label>
+                                    <input type="text" class="form-control" id="partNo2002" 
+                                           th:field="*{partNo2002}">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="serialNo2002" class="form-label">Serial No (2002)</label>
+                                    <input type="text" class="form-control" id="serialNo2002" 
+                                           th:field="*{serialNo2002}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Voter Details (Conditional: Status = Active) -->
+                    <div id="currentDetailsSection" class="conditional-section">
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="bi bi-person-check"></i> Current Voter ID Details 
+                                <small class="text-muted">(Required for Active Status)</small>
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nameCurrent" class="form-label">Name (Current)</label>
+                                    <input type="text" class="form-control" id="nameCurrent" 
+                                           th:field="*{nameCurrent}">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="parentSpouseNameCurrent" class="form-label">Parent/Spouse Name (Current)</label>
+                                    <input type="text" class="form-control" id="parentSpouseNameCurrent" 
+                                           th:field="*{parentSpouseNameCurrent}">
+                                    <small class="form-text text-info">
+                                        <i class="bi bi-info-circle"></i> This will be validated against family head/spouse names
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label for="epicNoCurrent" class="form-label">EPIC No (Current)</label>
+                                    <input type="text" class="form-control" id="epicNoCurrent" 
+                                           th:field="*{epicNoCurrent}">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="acNoCurrent" class="form-label">AC No (Current)</label>
+                                    <input type="text" class="form-control" id="acNoCurrent" 
+                                           th:field="*{acNoCurrent}">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="partNoCurrent" class="form-label">Part No (Current)</label>
+                                    <input type="text" class="form-control" id="partNoCurrent" 
+                                           th:field="*{partNoCurrent}">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="serialNoCurrent" class="form-label">Serial No (Current)</label>
+                                    <input type="text" class="form-control" id="serialNoCurrent" 
+                                           th:field="*{serialNoCurrent}">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="bloName" class="form-label">BLO Name</label>
+                                    <input type="text" class="form-control" id="bloName" 
+                                           th:field="*{bloName}">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="bloMobile" class="form-label">BLO Mobile</label>
+                                    <input type="text" class="form-control" id="bloMobile" 
+                                           th:field="*{bloMobile}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a th:href="@{/families/{id}/hierarchy(id=${family.id})}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add Member
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light text-center">
+        <div class="container">
+            <p class="text-muted mb-0">
+                <small>Family-wise Voter Hierarchy Collection System | SIR Data Collection</small>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateFormVisibility() {
+            const age = parseInt(document.getElementById('age').value) || 0;
+            const status = document.getElementById('status').value;
+            
+            const voter2002Section = document.getElementById('voter2002Section');
+            const voter2002Inputs = voter2002Section.querySelectorAll('input');
+            
+            const currentSection = document.getElementById('currentDetailsSection');
+            const currentInputs = currentSection.querySelectorAll('input');
+            
+            // Show/hide 2002 details based on age
+            if (age >= 41) {
+                voter2002Section.style.display = 'block';
+                voter2002Inputs.forEach(input => {
+                    input.required = true;
+                });
+            } else {
+                voter2002Section.style.display = 'none';
+                voter2002Inputs.forEach(input => {
+                    input.required = false;
+                    input.value = '';
+                });
+            }
+            
+            // Show/hide current details based on status
+            if (status == 'ACTIVE') {
+                currentSection.style.display = 'block';
+                currentInputs.forEach(input => {
+                    input.required = true;
+                });
+            } else {
+                currentSection.style.display = 'none';
+                currentInputs.forEach(input => {
+                    input.required = false;
+                    input.value = '';
+                });
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFormVisibility();
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
