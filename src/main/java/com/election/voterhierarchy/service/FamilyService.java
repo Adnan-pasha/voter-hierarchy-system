@@ -1,6 +1,5 @@
 package com.election.voterhierarchy.service;
 
-import org.hibernate.Hibernate;
 import com.election.voterhierarchy.dto.*;
 import com.election.voterhierarchy.entity.*;
 import com.election.voterhierarchy.enums.PersonStatus;
@@ -45,6 +44,7 @@ public class FamilyService {
             .createdBy("OPERATOR") // TODO: Get from security context
             .contactPerson(dto.getContactPerson())
             .contactNumber(dto.getContactNumber())
+            .members(new ArrayList<Person>())
             .build();
 
         // Create family head person

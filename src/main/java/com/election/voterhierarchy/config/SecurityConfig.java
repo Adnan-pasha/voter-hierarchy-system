@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -21,7 +22,7 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
 
     public SecurityConfig(UserService userService,
-                          PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -42,14 +43,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authenticationProvider(authenticationProvider())
-            .authorizeHttpRequests(auth -> auth
+                .authenticationProvider(authenticationProvider())
+                .authorizeHttpRequests(auth -> auth
                 // Public resources
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                
+                .requestMatchers("/login").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/users/**").hasRole("ADMIN")
-                
                 // ADMIN and OPERATOR can create/edit/delete
                 .requestMatchers("/families/new", "/families/create").hasAnyRole("ADMIN", "OPERATOR")
                 .requestMatchers("/families/*/edit", "/families/*/update").hasAnyRole("ADMIN", "OPERATOR")
@@ -57,31 +57,36 @@ public class SecurityConfig {
                 .requestMatchers("/families/*/members/new", "/families/*/members/add").hasAnyRole("ADMIN", "OPERATOR")
                 .requestMatchers("/families/*/members/*/edit", "/families/*/members/*/update").hasAnyRole("ADMIN", "OPERATOR")
                 .requestMatchers("/families/*/members/*/delete").hasAnyRole("ADMIN", "OPERATOR")
-                
                 // All authenticated users can view
                 .requestMatchers("/families/**").authenticated()
-                
                 // Require authentication for all other requests
                 .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
+                )
+                .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl("/families/dashboard", true)
                 .failureUrl("/login?error")
                 .permitAll()
-            )
-            .logout(logout -> logout
+                )
+                .logout(logout -> logout
+                .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
+                .clearAuthentication(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
-            )
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
-            .headers(headers -> headers.frameOptions().sameOrigin())
-            .sessionManagement(session -> session
+                )
+                .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .invalidSessionUrl("/login")
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(false)
-            );
+                .expiredUrl("/login?expired")
+                )
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin())
+                );
 
         return http.build();
     }
