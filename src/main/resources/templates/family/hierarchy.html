@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -65,7 +65,7 @@
 <body>
     <nav class="navbar navbar-dark navbar-expand-lg mb-4">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/families">
+            <a class="navbar-brand" href="/families/dashboard">
                 <i class="bi bi-people-fill"></i> Voter Hierarchy System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -74,14 +74,35 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/families">
-                            <i class="bi bi-house-door"></i> Families
+                        <a class="nav-link" href="/families/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/families">
+                            <i class="bi bi-list"></i> Families
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/families/search">
+                            <i class="bi bi-search"></i> Search
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
                         <a class="nav-link" href="/families/new">
                             <i class="bi bi-plus-circle"></i> New Family
                         </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/users">
+                            <i class="bi bi-person-gear"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link text-white-50">
+                            <i class="bi bi-person-circle"></i>
+                            <span sec:authentication="name">User</span>
+                        </span>
                     </li>
                     <li class="nav-item">
                         <form th:action="@{/logout}" method="post" class="d-inline">
@@ -102,13 +123,13 @@
                 <a th:href="@{/families/{id}/blo-sheet(id=${family.id})}" class="btn btn-info" target="_blank">
                     <i class="bi bi-printer"></i> BLO Verification Sheet
                 </a>
-                <a th:href="@{/families/{id}/edit(id=${family.id})}" class="btn btn-warning">
+                <a th:href="@{/families/{id}/edit(id=${family.id})}" class="btn btn-warning" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
                     <i class="bi bi-pencil"></i> Edit Family
                 </a>
-                <a th:href="@{/families/{id}/members/new(id=${family.id})}" class="btn btn-primary">
+                <a th:href="@{/families/{id}/members/new(id=${family.id})}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
                     <i class="bi bi-person-plus"></i> Add More Members
                 </a>
-                <a th:href="@{/families/{id}/finish(id=${family.id})}" class="btn btn-success">
+                <a th:href="@{/families/{id}/finish(id=${family.id})}" class="btn btn-success" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
                     <i class="bi bi-check-circle"></i> Finish Collection
                 </a>
             </div>
@@ -236,7 +257,7 @@
                             </div>
                         </div>
                         <!-- Edit and Delete Buttons for Members -->
-                        <div class="ms-3">
+                        <div class="ms-3" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
                             <div class="btn-group-vertical btn-group-sm" role="group">
                                 <a th:href="@{/families/{familyId}/members/{memberId}/edit(familyId=${family.id},memberId=${child.personId})}"
                                     class="btn btn-warning" title="Edit Member">

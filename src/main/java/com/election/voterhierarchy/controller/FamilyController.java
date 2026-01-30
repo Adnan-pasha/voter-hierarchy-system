@@ -17,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class FamilyController {
 
     private final FamilyService familyService;
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public String listFamilies(Model model) {
         List<Family> families = familyService.getAllFamilies();
@@ -37,6 +39,7 @@ public class FamilyController {
         return "family/list";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/new")
     public String showCreateForm(Model model) {
         model.addAttribute("familyHeadDTO", new FamilyHeadDTO());
@@ -44,6 +47,7 @@ public class FamilyController {
         return "family/create-head";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/create")
     public String createFamily(@Valid @ModelAttribute FamilyHeadDTO familyHeadDTO,
                               BindingResult result,
@@ -67,6 +71,7 @@ public class FamilyController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/{id}/members/new")
     public String showAddMemberForm(@PathVariable Long id, Model model) {
         try {
@@ -84,6 +89,7 @@ public class FamilyController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/{id}/members/add")
     public String addMember(@PathVariable Long id,
                            @Valid @ModelAttribute FamilyMemberDTO familyMemberDTO,
@@ -117,6 +123,7 @@ public class FamilyController {
         }
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}/hierarchy")
     public String viewHierarchy(@PathVariable Long id, Model model) {
         try {
@@ -136,6 +143,7 @@ public class FamilyController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable Long id, Model model) {
         Family family = familyService.getFamilyById(id);
@@ -180,6 +188,7 @@ public class FamilyController {
         return "family/edit";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/{id}/update")
     public String updateFamily(@PathVariable Long id,
                             @Valid @ModelAttribute FamilyUpdateDTO familyUpdateDTO,
@@ -207,6 +216,7 @@ public class FamilyController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/{familyId}/members/{memberId}/edit")
     public String showEditMemberForm(@PathVariable Long familyId, 
                                     @PathVariable Long memberId, 
@@ -258,6 +268,7 @@ public class FamilyController {
         return "family/edit-member";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/{familyId}/members/{memberId}/update")
     public String updateMember(@PathVariable Long familyId,
                             @PathVariable Long memberId,
@@ -274,6 +285,7 @@ public class FamilyController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/{familyId}/members/{memberId}/delete")
     public String deleteMember(@PathVariable Long familyId,
                             @PathVariable Long memberId,
@@ -288,6 +300,7 @@ public class FamilyController {
         return "redirect:/families/" + familyId + "/hierarchy";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/{id}/finish")
     public String finishFamily(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("successMessage", 
@@ -295,6 +308,7 @@ public class FamilyController {
         return "redirect:/families";
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         Map<String, Object> stats = familyService.getDashboardStats();
@@ -302,6 +316,7 @@ public class FamilyController {
         return "family/dashboard";
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/search")
     public String search(@ModelAttribute FamilyFilterDTO filter, Model model) {
         List<Family> families;
@@ -320,6 +335,7 @@ public class FamilyController {
         return "family/search";
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{id}/delete")
     public String deleteFamily(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -332,6 +348,7 @@ public class FamilyController {
         return "redirect:/families";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/{id}/blo-sheet")
     public String bloVerificationSheet(@PathVariable Long id, Model model) {
         Family family = familyService.getFamilyForBloSheet(id);

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,23 +12,28 @@
             min-height: 100vh;
             background-color: #f8f9fa;
         }
+
         .navbar {
             background-color: #2c3e50 !important;
         }
+
         .navbar-brand {
             font-weight: bold;
             color: #fff !important;
         }
+
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             margin-bottom: 1.5rem;
         }
+
         .form-section {
             background-color: #e9ecef;
             padding: 1rem;
             border-radius: 0.25rem;
             margin-bottom: 1rem;
         }
+
         .conditional-section {
             display: none;
             border-left: 3px solid #0d6efd;
@@ -36,10 +42,11 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-dark navbar-expand-lg mb-4">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/families">
+            <a class="navbar-brand" href="/families/dashboard">
                 <i class="bi bi-people-fill"></i> Voter Hierarchy System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -48,14 +55,35 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/families">
-                            <i class="bi bi-house-door"></i> Families
+                        <a class="nav-link" href="/families/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/families/new">
+                        <a class="nav-link" href="/families">
+                            <i class="bi bi-list"></i> Families
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/families/search">
+                            <i class="bi bi-search"></i> Search
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
+                        <a class="nav-link" href="/families/new">
                             <i class="bi bi-plus-circle"></i> New Family
                         </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/users">
+                            <i class="bi bi-person-gear"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link text-white-50">
+                            <i class="bi bi-person-circle"></i>
+                            <span sec:authentication="name">User</span>
+                        </span>
                     </li>
                     <li class="nav-item">
                         <form th:action="@{/logout}" method="post" class="d-inline">
@@ -80,60 +108,58 @@
         <div class="card">
             <div class="card-body">
                 <form th:action="@{/families/create}" th:object="${familyHeadDTO}" method="post">
-                    
+
                     <!-- 2002 Voter Details Section -->
                     <div class="form-section">
                         <h5 class="mb-3"><i class="bi bi-calendar3"></i> 2002 Voter List Details (Mandatory)</h5>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="name2002" class="form-label">Name (2002) *</label>
-                                <input type="text" class="form-control" id="name2002" 
-                                       th:field="*{name2002}" required>
-                                <div class="text-danger" th:if="${#fields.hasErrors('name2002')}" 
-                                     th:errors="*{name2002}"></div>
+                                <input type="text" class="form-control" id="name2002" th:field="*{name2002}" required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('name2002')}"
+                                    th:errors="*{name2002}"></div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="parentSpouseName2002" class="form-label">Parent/Spouse Name (2002) *</label>
-                                <input type="text" class="form-control" id="parentSpouseName2002" 
-                                       th:field="*{parentSpouseName2002}" required>
-                                <div class="text-danger" th:if="${#fields.hasErrors('parentSpouseName2002')}" 
-                                     th:errors="*{parentSpouseName2002}"></div>
+                                <input type="text" class="form-control" id="parentSpouseName2002"
+                                    th:field="*{parentSpouseName2002}" required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('parentSpouseName2002')}"
+                                    th:errors="*{parentSpouseName2002}"></div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <label for="epicNo2002" class="form-label">EPIC No (2002) *</label>
-                                <input type="text" class="form-control" id="epicNo2002" 
-                                       th:field="*{epicNo2002}" required>
-                                <div class="text-danger" th:if="${#fields.hasErrors('epicNo2002')}" 
-                                     th:errors="*{epicNo2002}"></div>
+                                <input type="text" class="form-control" id="epicNo2002" th:field="*{epicNo2002}"
+                                    required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('epicNo2002')}"
+                                    th:errors="*{epicNo2002}"></div>
                             </div>
-                            
+
                             <div class="col-md-3 mb-3">
                                 <label for="acNo2002" class="form-label">AC No (2002) *</label>
-                                <input type="text" class="form-control" id="acNo2002" 
-                                       th:field="*{acNo2002}" required>
-                                <div class="text-danger" th:if="${#fields.hasErrors('acNo2002')}" 
-                                     th:errors="*{acNo2002}"></div>
+                                <input type="text" class="form-control" id="acNo2002" th:field="*{acNo2002}" required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('acNo2002')}"
+                                    th:errors="*{acNo2002}"></div>
                             </div>
-                            
+
                             <div class="col-md-3 mb-3">
                                 <label for="partNo2002" class="form-label">Part No (2002) *</label>
-                                <input type="text" class="form-control" id="partNo2002" 
-                                       th:field="*{partNo2002}" required>
-                                <div class="text-danger" th:if="${#fields.hasErrors('partNo2002')}" 
-                                     th:errors="*{partNo2002}"></div>
+                                <input type="text" class="form-control" id="partNo2002" th:field="*{partNo2002}"
+                                    required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('partNo2002')}"
+                                    th:errors="*{partNo2002}"></div>
                             </div>
-                            
+
                             <div class="col-md-3 mb-3">
                                 <label for="serialNo2002" class="form-label">Serial No (2002) *</label>
-                                <input type="text" class="form-control" id="serialNo2002" 
-                                       th:field="*{serialNo2002}" required>
-                                <div class="text-danger" th:if="${#fields.hasErrors('serialNo2002')}" 
-                                     th:errors="*{serialNo2002}"></div>
+                                <input type="text" class="form-control" id="serialNo2002" th:field="*{serialNo2002}"
+                                    required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('serialNo2002')}"
+                                    th:errors="*{serialNo2002}"></div>
                             </div>
                         </div>
                     </div>
@@ -141,23 +167,21 @@
                     <!-- Contact Information Section -->
                     <div class="form-section">
                         <h5 class="mb-3"><i class="bi bi-telephone"></i> Contact Information</h5>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="contactPerson" class="form-label">Contact Person *</label>
-                                <input type="text" class="form-control" id="contactPerson" 
-                                    th:field="*{contactPerson}" required
-                                    placeholder="Primary contact person name">
-                                <div class="text-danger" th:if="${#fields.hasErrors('contactPerson')}" 
+                                <input type="text" class="form-control" id="contactPerson" th:field="*{contactPerson}"
+                                    required placeholder="Primary contact person name">
+                                <div class="text-danger" th:if="${#fields.hasErrors('contactPerson')}"
                                     th:errors="*{contactPerson}"></div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="contactNumber" class="form-label">Contact Number *</label>
-                                <input type="text" class="form-control" id="contactNumber" 
-                                    th:field="*{contactNumber}" required
-                                    placeholder="10-digit mobile number">
-                                <div class="text-danger" th:if="${#fields.hasErrors('contactNumber')}" 
+                                <input type="text" class="form-control" id="contactNumber" th:field="*{contactNumber}"
+                                    required placeholder="10-digit mobile number">
+                                <div class="text-danger" th:if="${#fields.hasErrors('contactNumber')}"
                                     th:errors="*{contactNumber}"></div>
                             </div>
                         </div>
@@ -166,93 +190,87 @@
                     <!-- Status Section -->
                     <div class="mb-3">
                         <label for="status" class="form-label">Status *</label>
-                        <select class="form-select" id="status" th:field="*{status}" required 
-                                onchange="toggleCurrentDetails()">
+                        <select class="form-select" id="status" th:field="*{status}" required
+                            onchange="toggleCurrentDetails()">
                             <option value="">-- Select Status --</option>
-                            <option th:each="status : ${statuses}" 
-                                    th:value="${status}" 
-                                    th:text="${status.displayName}">
+                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status.displayName}">
                             </option>
                         </select>
-                        <div class="text-danger" th:if="${#fields.hasErrors('status')}" 
-                             th:errors="*{status}"></div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
                     </div>
 
                     <!-- Current Voter Details Section (Conditional) -->
                     <div id="currentDetailsSection" class="conditional-section">
                         <div class="form-section">
                             <h5 class="mb-3">
-                                <i class="bi bi-person-check"></i> Current Voter ID Details 
+                                <i class="bi bi-person-check"></i> Current Voter ID Details
                                 <small class="text-muted">(Required for Active Status)</small>
                             </h5>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nameCurrent" class="form-label">Name (Current)</label>
-                                    <input type="text" class="form-control" id="nameCurrent" 
-                                           th:field="*{nameCurrent}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('nameCurrent')}" 
-                                         th:errors="*{nameCurrent}"></div>
+                                    <input type="text" class="form-control" id="nameCurrent" th:field="*{nameCurrent}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('nameCurrent')}"
+                                        th:errors="*{nameCurrent}"></div>
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
-                                    <label for="parentSpouseNameCurrent" class="form-label">Parent/Spouse Name (Current)</label>
-                                    <input type="text" class="form-control" id="parentSpouseNameCurrent" 
-                                           th:field="*{parentSpouseNameCurrent}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('parentSpouseNameCurrent')}" 
-                                         th:errors="*{parentSpouseNameCurrent}"></div>
+                                    <label for="parentSpouseNameCurrent" class="form-label">Parent/Spouse Name
+                                        (Current)</label>
+                                    <input type="text" class="form-control" id="parentSpouseNameCurrent"
+                                        th:field="*{parentSpouseNameCurrent}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('parentSpouseNameCurrent')}"
+                                        th:errors="*{parentSpouseNameCurrent}"></div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <label for="epicNoCurrent" class="form-label">EPIC No (Current)</label>
-                                    <input type="text" class="form-control" id="epicNoCurrent" 
-                                           th:field="*{epicNoCurrent}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('epicNoCurrent')}" 
-                                         th:errors="*{epicNoCurrent}"></div>
+                                    <input type="text" class="form-control" id="epicNoCurrent"
+                                        th:field="*{epicNoCurrent}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('epicNoCurrent')}"
+                                        th:errors="*{epicNoCurrent}"></div>
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="acNoCurrent" class="form-label">AC No (Current)</label>
-                                    <input type="text" class="form-control" id="acNoCurrent" 
-                                           th:field="*{acNoCurrent}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('acNoCurrent')}" 
-                                         th:errors="*{acNoCurrent}"></div>
+                                    <input type="text" class="form-control" id="acNoCurrent" th:field="*{acNoCurrent}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('acNoCurrent')}"
+                                        th:errors="*{acNoCurrent}"></div>
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="partNoCurrent" class="form-label">Part No (Current)</label>
-                                    <input type="text" class="form-control" id="partNoCurrent" 
-                                           th:field="*{partNoCurrent}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('partNoCurrent')}" 
-                                         th:errors="*{partNoCurrent}"></div>
+                                    <input type="text" class="form-control" id="partNoCurrent"
+                                        th:field="*{partNoCurrent}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('partNoCurrent')}"
+                                        th:errors="*{partNoCurrent}"></div>
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="serialNoCurrent" class="form-label">Serial No (Current)</label>
-                                    <input type="text" class="form-control" id="serialNoCurrent" 
-                                           th:field="*{serialNoCurrent}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('serialNoCurrent')}" 
-                                         th:errors="*{serialNoCurrent}"></div>
+                                    <input type="text" class="form-control" id="serialNoCurrent"
+                                        th:field="*{serialNoCurrent}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('serialNoCurrent')}"
+                                        th:errors="*{serialNoCurrent}"></div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="bloName" class="form-label">BLO Name</label>
-                                    <input type="text" class="form-control" id="bloName" 
-                                           th:field="*{bloName}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('bloName')}" 
-                                         th:errors="*{bloName}"></div>
+                                    <input type="text" class="form-control" id="bloName" th:field="*{bloName}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('bloName')}"
+                                        th:errors="*{bloName}"></div>
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
                                     <label for="bloMobile" class="form-label">BLO Mobile</label>
-                                    <input type="text" class="form-control" id="bloMobile" 
-                                           th:field="*{bloMobile}">
-                                    <div class="text-danger" th:if="${#fields.hasErrors('bloMobile')}" 
-                                         th:errors="*{bloMobile}"></div>
+                                    <input type="text" class="form-control" id="bloMobile" th:field="*{bloMobile}">
+                                    <div class="text-danger" th:if="${#fields.hasErrors('bloMobile')}"
+                                        th:errors="*{bloMobile}"></div>
                                 </div>
                             </div>
                         </div>
@@ -285,7 +303,7 @@
             const status = document.getElementById('status').value;
             const currentSection = document.getElementById('currentDetailsSection');
             const currentInputs = currentSection.querySelectorAll('input');
-            
+
             if (status === 'ACTIVE') {
                 currentSection.style.display = 'block';
                 currentInputs.forEach(input => {
@@ -301,9 +319,10 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             toggleCurrentDetails();
         });
     </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,23 +12,28 @@
             min-height: 100vh;
             background-color: #f8f9fa;
         }
+
         .navbar {
             background-color: #2c3e50 !important;
         }
+
         .navbar-brand {
             font-weight: bold;
             color: #fff !important;
         }
+
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             margin-bottom: 1.5rem;
         }
+
         .form-section {
             background-color: #e9ecef;
             padding: 1rem;
             border-radius: 0.25rem;
             margin-bottom: 1rem;
         }
+
         .conditional-section {
             display: none;
             border-left: 3px solid #0d6efd;
@@ -36,10 +42,11 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-dark navbar-expand-lg mb-4">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/families">
+            <a class="navbar-brand" href="/families/dashboard">
                 <i class="bi bi-people-fill"></i> Voter Hierarchy System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -48,14 +55,35 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/families">
-                            <i class="bi bi-house-door"></i> Families
+                        <a class="nav-link" href="/families/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/families">
+                            <i class="bi bi-list"></i> Families
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/families/search">
+                            <i class="bi bi-search"></i> Search
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'OPERATOR')">
                         <a class="nav-link" href="/families/new">
                             <i class="bi bi-plus-circle"></i> New Family
                         </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/users">
+                            <i class="bi bi-person-gear"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link text-white-50">
+                            <i class="bi bi-person-circle"></i>
+                            <span sec:authentication="name">User</span>
+                        </span>
                     </li>
                     <li class="nav-item">
                         <form th:action="@{/logout}" method="post" class="d-inline">
@@ -96,7 +124,7 @@
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="bi bi-house-door"></i> Family: 
+                    <i class="bi bi-house-door"></i> Family:
                     <span th:text="${family.familyCode}">FAM-XXX</span>
                 </h5>
             </div>
@@ -105,7 +133,7 @@
                     <div class="col-md-6">
                         <strong>Family Head:</strong>
                         <span th:if="${family.familyHead ne null and family.familyHead.voterDetails2002 ne null}"
-                              th:text="${family.familyHead.voterDetails2002.name}">
+                            th:text="${family.familyHead.voterDetails2002.name}">
                             Name
                         </span>
                         <span th:if="${family.familyHead eq null or family.familyHead.voterDetails2002 eq null}">
@@ -114,7 +142,8 @@
                     </div>
                     <div class="col-md-6">
                         <strong>Current Members:</strong>
-                        <span class="badge bg-info" th:text="${family.members ne null ? family.members.size() : 0}">0</span>
+                        <span class="badge bg-info"
+                            th:text="${family.members ne null ? family.members.size() : 0}">0</span>
                     </div>
                 </div>
             </div>
@@ -123,52 +152,48 @@
         <!-- Add Member Form -->
         <div class="card">
             <div class="card-body">
-                <form th:action="@{/families/{id}/members/add(id=${family.id})}" 
-                      th:object="${familyMemberDTO}" method="post">
-                    
+                <form th:action="@{/families/{id}/members/add(id=${family.id})}" th:object="${familyMemberDTO}"
+                    method="post">
+
                     <!-- Relation, Age, Status (Strict Order) -->
                     <div class="form-section">
                         <h5 class="mb-3"><i class="bi bi-info-circle"></i> Basic Information</h5>
-                        
+
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="relationType" class="form-label">Relation Type *</label>
-                                <select class="form-select" id="relationType" th:field="*{relationType}" 
-                                        required onchange="updateFormVisibility()">
+                                <select class="form-select" id="relationType" th:field="*{relationType}" required
+                                    onchange="updateFormVisibility()">
                                     <option value="">-- Select Relation --</option>
-                                    <option th:each="relation : ${relationTypes}" 
-                                            th:value="${relation}" 
-                                            th:text="${relation.displayName}">
+                                    <option th:each="relation : ${relationTypes}" th:value="${relation}"
+                                        th:text="${relation.displayName}">
                                     </option>
                                 </select>
-                                <div class="text-danger" th:if="${#fields.hasErrors('relationType')}" 
-                                     th:errors="*{relationType}"></div>
+                                <div class="text-danger" th:if="${#fields.hasErrors('relationType')}"
+                                    th:errors="*{relationType}"></div>
                             </div>
-                            
+
                             <div class="col-md-4 mb-3">
                                 <label for="age" class="form-label">Age *</label>
-                                <input type="number" class="form-control" id="age" 
-                                       th:field="*{age}" required min="1" max="120"
-                                       onchange="updateFormVisibility()">
-                                <div class="text-danger" th:if="${#fields.hasErrors('age')}" 
-                                     th:errors="*{age}"></div>
+                                <input type="number" class="form-control" id="age" th:field="*{age}" required min="1"
+                                    max="120" onchange="updateFormVisibility()">
+                                <div class="text-danger" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"></div>
                                 <small class="form-text text-muted">
                                     2002 voter details required if age ≥ 41
                                 </small>
                             </div>
-                            
+
                             <div class="col-md-4 mb-3">
                                 <label for="status" class="form-label">Status *</label>
-                                <select class="form-select" id="status" th:field="*{status}" 
-                                        required onchange="updateFormVisibility()">
+                                <select class="form-select" id="status" th:field="*{status}" required
+                                    onchange="updateFormVisibility()">
                                     <option value="">-- Select Status --</option>
-                                    <option th:each="status : ${statuses}" 
-                                            th:value="${status}" 
-                                            th:text="${status.displayName}">
+                                    <option th:each="status : ${statuses}" th:value="${status}"
+                                        th:text="${status.displayName}">
                                     </option>
                                 </select>
-                                <div class="text-danger" th:if="${#fields.hasErrors('status')}" 
-                                     th:errors="*{status}"></div>
+                                <div class="text-danger" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -177,47 +202,44 @@
                     <div id="voter2002Section" class="conditional-section">
                         <div class="form-section">
                             <h5 class="mb-3">
-                                <i class="bi bi-calendar3"></i> 2002 Voter List Details 
+                                <i class="bi bi-calendar3"></i> 2002 Voter List Details
                                 <small class="text-muted">(Required for Age ≥ 41)</small>
                             </h5>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="name2002" class="form-label">Name (2002)</label>
-                                    <input type="text" class="form-control" id="name2002" 
-                                           th:field="*{name2002}">
+                                    <input type="text" class="form-control" id="name2002" th:field="*{name2002}">
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
-                                    <label for="parentSpouseName2002" class="form-label">Parent/Spouse Name (2002)</label>
-                                    <input type="text" class="form-control" id="parentSpouseName2002" 
-                                           th:field="*{parentSpouseName2002}">
+                                    <label for="parentSpouseName2002" class="form-label">Parent/Spouse Name
+                                        (2002)</label>
+                                    <input type="text" class="form-control" id="parentSpouseName2002"
+                                        th:field="*{parentSpouseName2002}">
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <label for="epicNo2002" class="form-label">EPIC No (2002)</label>
-                                    <input type="text" class="form-control" id="epicNo2002" 
-                                           th:field="*{epicNo2002}">
+                                    <input type="text" class="form-control" id="epicNo2002" th:field="*{epicNo2002}">
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="acNo2002" class="form-label">AC No (2002)</label>
-                                    <input type="text" class="form-control" id="acNo2002" 
-                                           th:field="*{acNo2002}">
+                                    <input type="text" class="form-control" id="acNo2002" th:field="*{acNo2002}">
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="partNo2002" class="form-label">Part No (2002)</label>
-                                    <input type="text" class="form-control" id="partNo2002" 
-                                           th:field="*{partNo2002}">
+                                    <input type="text" class="form-control" id="partNo2002" th:field="*{partNo2002}">
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="serialNo2002" class="form-label">Serial No (2002)</label>
-                                    <input type="text" class="form-control" id="serialNo2002" 
-                                           th:field="*{serialNo2002}">
+                                    <input type="text" class="form-control" id="serialNo2002"
+                                        th:field="*{serialNo2002}">
                                 </div>
                             </div>
                         </div>
@@ -227,23 +249,24 @@
                     <div id="currentDetailsSection" class="conditional-section">
                         <div class="form-section">
                             <h5 class="mb-3">
-                                <i class="bi bi-person-check"></i> Current Voter ID Details 
+                                <i class="bi bi-person-check"></i> Current Voter ID Details
                                 <small class="text-muted">(Required for Active Status)</small>
                             </h5>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nameCurrent" class="form-label">Name (Current)</label>
-                                    <input type="text" class="form-control" id="nameCurrent" 
-                                           th:field="*{nameCurrent}">
+                                    <input type="text" class="form-control" id="nameCurrent" th:field="*{nameCurrent}">
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
-                                    <label for="parentSpouseNameCurrent" class="form-label">Parent/Spouse Name (Current)</label>
-                                    <input type="text" class="form-control" id="parentSpouseNameCurrent" 
-                                           th:field="*{parentSpouseNameCurrent}">
+                                    <label for="parentSpouseNameCurrent" class="form-label">Parent/Spouse Name
+                                        (Current)</label>
+                                    <input type="text" class="form-control" id="parentSpouseNameCurrent"
+                                        th:field="*{parentSpouseNameCurrent}">
                                     <small class="form-text text-info">
-                                        <i class="bi bi-info-circle"></i> This will be validated against family head/spouse names
+                                        <i class="bi bi-info-circle"></i> This will be validated against family
+                                        head/spouse names
                                     </small>
                                 </div>
                             </div>
@@ -251,40 +274,37 @@
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <label for="epicNoCurrent" class="form-label">EPIC No (Current)</label>
-                                    <input type="text" class="form-control" id="epicNoCurrent" 
-                                           th:field="*{epicNoCurrent}">
+                                    <input type="text" class="form-control" id="epicNoCurrent"
+                                        th:field="*{epicNoCurrent}">
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="acNoCurrent" class="form-label">AC No (Current)</label>
-                                    <input type="text" class="form-control" id="acNoCurrent" 
-                                           th:field="*{acNoCurrent}">
+                                    <input type="text" class="form-control" id="acNoCurrent" th:field="*{acNoCurrent}">
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="partNoCurrent" class="form-label">Part No (Current)</label>
-                                    <input type="text" class="form-control" id="partNoCurrent" 
-                                           th:field="*{partNoCurrent}">
+                                    <input type="text" class="form-control" id="partNoCurrent"
+                                        th:field="*{partNoCurrent}">
                                 </div>
-                                
+
                                 <div class="col-md-3 mb-3">
                                     <label for="serialNoCurrent" class="form-label">Serial No (Current)</label>
-                                    <input type="text" class="form-control" id="serialNoCurrent" 
-                                           th:field="*{serialNoCurrent}">
+                                    <input type="text" class="form-control" id="serialNoCurrent"
+                                        th:field="*{serialNoCurrent}">
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="bloName" class="form-label">BLO Name</label>
-                                    <input type="text" class="form-control" id="bloName" 
-                                           th:field="*{bloName}">
+                                    <input type="text" class="form-control" id="bloName" th:field="*{bloName}">
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
                                     <label for="bloMobile" class="form-label">BLO Mobile</label>
-                                    <input type="text" class="form-control" id="bloMobile" 
-                                           th:field="*{bloMobile}">
+                                    <input type="text" class="form-control" id="bloMobile" th:field="*{bloMobile}">
                                 </div>
                             </div>
                         </div>
@@ -316,13 +336,13 @@
         function updateFormVisibility() {
             const age = parseInt(document.getElementById('age').value) || 0;
             const status = document.getElementById('status').value;
-            
+
             const voter2002Section = document.getElementById('voter2002Section');
             const voter2002Inputs = voter2002Section.querySelectorAll('input');
-            
+
             const currentSection = document.getElementById('currentDetailsSection');
             const currentInputs = currentSection.querySelectorAll('input');
-            
+
             // Show/hide 2002 details based on age
             if (age >= 41) {
                 voter2002Section.style.display = 'block';
@@ -336,7 +356,7 @@
                     input.value = '';
                 });
             }
-            
+
             // Show/hide current details based on status
             if (status == 'ACTIVE') {
                 currentSection.style.display = 'block';
@@ -353,18 +373,19 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             updateFormVisibility();
         });
 
         // Auto-dismiss alerts after 5 seconds
-        setTimeout(function() {
+        setTimeout(function () {
             var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
+            alerts.forEach(function (alert) {
                 var bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             });
         }, 5000);
     </script>
 </body>
+
 </html>
